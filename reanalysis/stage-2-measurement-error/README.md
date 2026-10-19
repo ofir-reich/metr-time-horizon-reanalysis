@@ -16,7 +16,7 @@ Uncertainty in the human baseline times matters a lot for the *absolute* time ho
 - **The absolute horizons are fragile.** If the baseline times share a systematic bias — every task measured against humans who were uniformly faster or slower than the reference population — the headline horizon moves by a factor of about 2.3 in either direction under a bias the size of one per-task σ̃. The published horizon numbers depend on there being no such shared bias.
 - **The doubling time is robust.** Independent per-task noise averages out across the 170 tasks (it widens the doubling-time confidence interval by only about 2 days), and a systematic bias of that same size moves the doubling time by about 10% at most, because rescaling every task's time shifts the fitted line up or down without changing its slope.
 - **Even zero-mean noise in the baseline times biases the fitted curves; SIMEX estimates the size of that bias.** Noise in a regression's x-values flattens the fitted success curves (errors-in-variables attenuation), which distorts the horizons estimated from them even when the noise has no systematic direction. The SIMEX correction differs sharply by agent: the 80%-horizon rises 25–40% for essentially every capable agent, while the 50%-horizon barely moves for mid-pack agents and drops for the most capable one (−19% for Claude Opus 4.5).
-- **METR assumed slightly too little noise, not too much.** Our per-task noise estimates come out a bit above METR's global assumption on the long tasks that drive the top-end horizons — so METR's published SIMEX correction slightly understates the effect.
+- **METR assumed slightly too little noise.** Our per-task noise estimates come out a bit above METR's global assumption on the long tasks that drive the top-end horizons — so METR's published SIMEX correction slightly understates the effect.
 
 ## Scope and conventions
 
@@ -30,9 +30,9 @@ Everything below is on **Time Horizon v1.0** (the paper's suite). The whole chai
 
 Everything downstream needs to know how noisy each task's measured human time is: the spread σ of log completion time across the humans who attempted the task. The obstacle is sample size. Most tasks have only two to four successful baseline runs, and 21 tasks have exactly one, where no spread is observable at all. The solution is to apply some prior to the variance.
 
-The model is a standard Bayesian hierarchical one: each task's true variance is drawn from a shared scaled inverse-$\chi^2$ prior — the conjugate prior for a normal variance — with strength $d_0$ (in pseudo-observations) and typical value $s_0^2$. The empirical-Bayes twist is that the prior is not estimated jointly with the rest of the model: it is fitted first, by method of moments across the whole ensemble of tasks,[^moments] after which each task gets a closed-form posterior estimate. This is the *limma/eBayes* moderated-variance estimator (Smyth 2004), the standard tool wherever many variances must each be estimated from two or three observations. Each task's estimate then blends its own observed variance $s_j^2$ (with $d_j = n_j - 1$ degrees of freedom) with the prior:
+The model is a standard Bayesian hierarchical one: each task's true variance is drawn from a shared scaled inverse-χ² prior — the conjugate prior for a normal variance — with strength $d_0$ (in pseudo-observations) and typical value $s_0^2$. The empirical-Bayes twist is that the prior is not estimated jointly with the rest of the model: it is fitted first, by method of moments across the whole ensemble of tasks,[^moments] after which each task gets a closed-form posterior estimate. This is the *limma/eBayes* moderated-variance estimator (Smyth 2004), the standard tool wherever many variances must each be estimated from two or three observations. Each task's estimate then blends its own observed variance $s_j^2$ (with $d_j = n_j - 1$ degrees of freedom) with the prior:
 
-$$\tilde\sigma_j^2 \;=\; \frac{d_0\,s_0^2 \;+\; d_j\,s_j^2}{d_0 + d_j}$$
+$$\tilde\sigma_j^2 = \frac{d_0 s_0^2 + d_j s_j^2}{d_0 + d_j}$$
 
 Tasks with many runs keep roughly their own estimate, tasks with two or three runs are pulled toward the prior, and single-run tasks get exactly the prior value $s_0$. The prior is fitted separately per task source, because the sources differ a lot:
 
@@ -57,7 +57,7 @@ Further figures: [spread vs task length](figures/sigma_vs_length.png) · [per-ta
 
 Code: [`sigma_task.py`](sigma_task.py) (jupytext; paired executed notebook [`sigma_task.ipynb`](sigma_task.ipynb)). Output: [`data/sigma_by_task.csv`](data/sigma_by_task.csv) — every task's raw and shrunken σ and the standard error of its `human_minutes`.
 
-[^moments]: The hyperparameters are estimated by method of moments on $\log s_j^2$: its observed dispersion across tasks decomposes into known $\chi^2$ sampling noise (trigamma functions of the $d_j$) plus true between-task spread (a trigamma function of $d_0$); if sampling noise already explains all the observed dispersion, the fit returns $d_0 = \infty$. One task with four identical recorded times ($s_j = 0$ exactly) is excluded from the moment fit but still shrunk like every other task.
+[^moments]: The hyperparameters are estimated by method of moments on log sⱼ²: its observed dispersion across tasks decomposes into known χ² sampling noise (trigamma functions of the dⱼ) plus true between-task spread (a trigamma function of d₀); if sampling noise already explains all the observed dispersion, the fit returns d₀ = ∞. One task with four identical recorded times (sⱼ = 0 exactly) is excluded from the moment fit but still shrunk like every other task.
 
 [^rebench]: RE-Bench has only 7 tasks with observable spread — too few for a stable fit of its own — and its long, open-ended research tasks resemble HCAST far more than the seconds-scale SWAA tasks.
 
