@@ -261,13 +261,15 @@ sigma_by_task["log_time_std_shrunken"] = np.sqrt(np.where(
     / (prior_degrees_of_freedom_by_task + sigma_by_task["degrees_of_freedom"]),
 ))
 
+# Plot baselined tasks only: the three RE-Bench estimate tasks have runs (so a σ̃), but
+# their x-value is the 480-min estimate, whose error is METR's 1.05, not σ̃ (see SEM below).
 fig = px.scatter(
-    sigma_by_task.reset_index(),
+    sigma_by_task.query("human_source == 'baseline'").reset_index(),
     x="log_time_std", y="log_time_std_shrunken",
     color="task_source", size="n_successful_runs",
     hover_name="task_id",
-    title="Empirical-Bayes shrinkage of per-task σ "
-          "(diagonal = no shrinkage; horizontal pull-lines = per-source prior s₀)",
+    title="Empirical-Bayes shrinkage of per-task σ (baselined tasks)<br><sup>"
+          "diagonal = no shrinkage; horizontal pull-lines = per-source prior s₀</sup>",
     labels={"log_time_std": "raw sample SD of ln(minutes)",
             "log_time_std_shrunken": "shrunken σ̃"},
 )
