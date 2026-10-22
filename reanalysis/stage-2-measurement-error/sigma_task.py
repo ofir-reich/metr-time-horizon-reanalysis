@@ -127,9 +127,9 @@ tasks_with_observed_spread = sigma_by_task.query("degrees_of_freedom >= 1").copy
 fig = px.ecdf(
     tasks_with_observed_spread,
     x="log_time_std",
-    color="task_source",
-    title="Between-baseliner spread of log completion time, by task source "
-          f"(n≥2 tasks; dashed line: METR's global σ = {METR_SIGMA_BASELINED})",
+    color="task_source", **metr.TASK_SOURCE_STYLE,
+    title="Between-baseliner spread of log completion time, by task source<br><sup>"
+          f"n≥2 tasks; dashed line: METR's global σ = {METR_SIGMA_BASELINED}</sup>",
     labels={"log_time_std": "sample SD of ln(completion minutes)"},
 )
 fig.add_vline(x=METR_SIGMA_BASELINED, line_dash="dash", line_color="gray")
@@ -144,7 +144,7 @@ show(fig)
 fig = px.scatter(
     tasks_with_observed_spread.reset_index(),
     x="human_minutes", y="log_time_std",
-    color="task_source", size="n_successful_runs",
+    color="task_source", **metr.TASK_SOURCE_STYLE, size="n_successful_runs",
     hover_name="task_id", log_x=True,
     title="Between-baseliner spread vs task length",
     labels={"human_minutes": "human_minutes (log scale)",
@@ -266,7 +266,7 @@ sigma_by_task["log_time_std_shrunken"] = np.sqrt(np.where(
 fig = px.scatter(
     sigma_by_task.query("human_source == 'baseline'").reset_index(),
     x="log_time_std", y="log_time_std_shrunken",
-    color="task_source", size="n_successful_runs",
+    color="task_source", **metr.TASK_SOURCE_STYLE, size="n_successful_runs",
     hover_name="task_id",
     title="Empirical-Bayes shrinkage of per-task σ (baselined tasks)<br><sup>"
           "diagonal = no shrinkage; horizontal pull-lines = per-source prior s₀</sup>",

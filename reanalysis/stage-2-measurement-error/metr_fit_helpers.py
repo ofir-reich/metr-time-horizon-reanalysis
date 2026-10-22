@@ -47,6 +47,16 @@ def show(fig) -> None:
     if IS_INTERACTIVE:
         fig.show()
 
+
+# One colour per task source across every stage's figures, legend ordered by typical task
+# length. Stage 1 mirrors these values. Spread into px calls: px.scatter(..., **TASK_SOURCE_STYLE).
+TASK_SOURCE_ORDER = ["SWAA", "HCAST", "RE-Bench"]
+TASK_SOURCE_COLORS = {"SWAA": "#00CC96", "HCAST": "#636EFA", "RE-Bench": "#EF553B"}
+TASK_SOURCE_STYLE = dict(
+    color_discrete_map=TASK_SOURCE_COLORS,
+    category_orders={"task_source": TASK_SOURCE_ORDER},
+)
+
 # Round floats on CSV write so re-running a script is byte-stable: BLAS summation order
 # varies run to run and perturbs the last couple of digits, which otherwise shows up as
 # spurious diffs in every committed data file.

@@ -63,8 +63,8 @@ FIGURES = HERE / "figures"
 DATA_OUT = HERE / "data"
 
 MAIN_DATASET_VERSION = "1-0"   # the paper's suite; v1.1 replication in §7
-TASK_SOURCE_ORDER = ["HCAST", "RE-Bench", "SWAA"]
-TASK_SOURCE_COLORS = {"HCAST": "#2a78d6", "RE-Bench": "#eb6834", "SWAA": "#1baf7a"}
+TASK_SOURCE_ORDER = ["SWAA", "HCAST", "RE-Bench"]   # = Stage 2's metr_fit_helpers
+TASK_SOURCE_COLORS = {"SWAA": "#00CC96", "HCAST": "#636EFA", "RE-Bench": "#EF553B"}
 TASK_SOURCE_SYMBOLS = {"HCAST": "circle", "RE-Bench": "square", "SWAA": "diamond"}
 
 try:  # running under a Jupyter/VS Code kernel?

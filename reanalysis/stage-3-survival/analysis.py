@@ -475,7 +475,7 @@ print(corrected_tasks.groupby("task_source")["mle_over_naive"]
 correction_plot_data = survival_by_task.query("n_censored > 0 and n_successes > 0").reset_index()
 fig = px.scatter(
     correction_plot_data, x="published_human_minutes", y="mle_over_naive",
-    color="task_source", size="n_censored", hover_name="task_id", log_x=True,
+    color="task_source", **metr.TASK_SOURCE_STYLE, size="n_censored", hover_name="task_id", log_x=True,
     title="Censoring correction factor per task<br>"
           "<sub>1.0 = unchanged; higher = published human_minutes more understated</sub>",
     labels={"published_human_minutes": "published human_minutes (log scale)",
