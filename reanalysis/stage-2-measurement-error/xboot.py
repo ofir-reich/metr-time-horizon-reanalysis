@@ -260,7 +260,8 @@ print(f"\nmedian p50 interval widening, nonparametric floor (SOTA-at-release age
 
 fig = metr.dodged_confidence_interval_figure(
     nonparam_ci_by_agent_condition, agents_sorted, ["metr", "metr+x", "x_only"],
-    title="50%-horizon 95% bootstrap interval — with vs without x-axis resampling",
+    title="95% intervals for the 50% time horizon, with and without resampling baseline runs",
+    condition_labels=metr.XBOOT_CONDITION_LABELS,
 )
 fig.write_image(FIGURES / f"xboot_nonparam_ci_comparison{SUFFIX}.png",
                 width=850, height=620, scale=2)
@@ -274,12 +275,13 @@ nonparam_doubling_by_replicate = doubling_time_summary(
     nonparam_p50_by_replicate_by_condition, f"xboot_nonparam_doubling_times{SUFFIX}.csv"
 )
 fig = px.ecdf(
-    nonparam_doubling_by_replicate.melt(
+    nonparam_doubling_by_replicate.rename(columns=metr.XBOOT_CONDITION_LABELS).melt(
         var_name="condition", value_name="doubling_days"
     ),
     x="doubling_days", color="condition",
-    title=f"Bootstrap distribution of the doubling time (frontier agents, {N_BOOT} reps)",
-    labels={"doubling_days": "doubling time (days)"},
+    title="Bootstrap distribution of the doubling time<br><sup>"
+          f"with and without resampling baseline runs; SOTA-at-release agents, {N_BOOT} replicates</sup>",
+    labels={"doubling_days": "doubling time (days)", "condition": ""},
 )
 fig.write_image(FIGURES / f"xboot_nonparam_doubling_time{SUFFIX}.png",
                 width=800, height=450, scale=2)
@@ -399,7 +401,8 @@ print(f"median p50 CI widening — nonparametric floor: "
 # %%
 fig = metr.dodged_confidence_interval_figure(
     param_ci_by_agent_condition, agents_sorted, ["metr", "metr+x_param", "x_param_only"],
-    title="50%-horizon 95% interval — parametric per-task x-noise vs METR baseline",
+    title=metr.XBOOT_PARAM_CI_TITLE,
+    condition_labels=metr.XBOOT_CONDITION_LABELS,
 )
 fig.write_image(FIGURES / f"xboot_param_ci_comparison{SUFFIX}.png",
                 width=850, height=620, scale=2)
@@ -413,12 +416,12 @@ param_doubling_by_replicate = doubling_time_summary(
     param_p50_by_replicate_by_condition, f"xboot_param_doubling_times{SUFFIX}.csv"
 )
 fig = px.ecdf(
-    param_doubling_by_replicate.melt(
+    param_doubling_by_replicate.rename(columns=metr.XBOOT_CONDITION_LABELS).melt(
         var_name="condition", value_name="doubling_days"),
     x="doubling_days", color="condition",
-    title=f"Doubling-time bootstrap distribution — parametric per-task x-noise "
-          f"({N_BOOT} reps)",
-    labels={"doubling_days": "doubling time (days)"},
+    title="Bootstrap distribution of the doubling time<br><sup>"
+          f"with and without uncertainty in human task times; SOTA-at-release agents, {N_BOOT} replicates</sup>",
+    labels={"doubling_days": "doubling time (days)", "condition": ""},
 )
 fig.write_image(FIGURES / f"xboot_param_doubling_time{SUFFIX}.png",
                 width=800, height=450, scale=2)

@@ -85,7 +85,7 @@ METR's published confidence intervals come from a hierarchical bootstrap over ta
 
 The doubling time, however, still barely notices: its 95% interval grows by only about two days even with every task perturbed at its full estimated noise ([distribution](figures/xboot_param_doubling_time.png)). Independent errors average out across 170 tasks. What does *not* average out is an error shared by all tasks at once — the next section.
 
-Code: [`xboot.py`](xboot.py) / [notebook](xboot.ipynb). Outputs: per-agent intervals and doubling-time draws for both passes in [`data/`](data/) (`xboot_nonparam_*`, `xboot_param_*`).
+Code: [`xboot.py`](xboot.py) / [notebook](xboot.ipynb); [`blog_ci_comparison.py`](blog_ci_comparison.py) redraws the interval chart above without the human-time-only series, for the blog post. Outputs: per-agent intervals and doubling-time draws for both passes in [`data/`](data/) (`xboot_nonparam_*`, `xboot_param_*`).
 
 ## Coherent ±1σ shift (a systematic-error scenario)
 

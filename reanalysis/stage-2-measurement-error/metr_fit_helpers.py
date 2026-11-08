@@ -155,18 +155,33 @@ def fit_doubling_days(
     return 365.25 / slope
 
 
+# Reader-facing names for the x-bootstrap conditions, used in every xboot figure legend.
+XBOOT_CONDITION_LABELS = {
+    "metr": "METR's bootstrap",
+    "metr+x": "METR + resampled baseline runs",
+    "x_only": "Resampled baseline runs only",
+    "metr+x_param": "METR + human-time uncertainty",
+    "x_param_only": "Human-time uncertainty only",
+}
+XBOOT_PARAM_CI_TITLE = (
+    "95% intervals for the 50% time horizon, with and without uncertainty in human task times"
+)
+
+
 def dodged_confidence_interval_figure(
     ci_by_agent_condition: pd.DataFrame,
     agents_sorted: list[str],
     condition_order: list[str],
     title: str,
     row_offset: float = 0.26,
+    condition_labels: dict[str, str] | None = None,
 ) -> "px.scatter":
     """Horizontal interval plot, one row per agent, with the conditions **vertically
     offset** so their intervals sit side by side instead of on top of each other, and
     intervals drawn as bare capless lines (the style METR uses in the paper).
 
     Expects columns agent / condition / p50_median / ci_lower / ci_upper.
+    `condition_labels` optionally renames conditions in the legend and drops its title.
     """
     y_position_by_agent = {agent: index for index, agent in enumerate(agents_sorted)}
     offset_by_condition = {
@@ -182,6 +197,9 @@ def dodged_confidence_interval_figure(
     )
     plot_data["error_upper"] = plot_data["ci_upper"] - plot_data["p50_median"]
     plot_data["error_lower"] = plot_data["p50_median"] - plot_data["ci_lower"]
+    if condition_labels:
+        plot_data["condition"] = plot_data["condition"].map(condition_labels)
+        condition_order = [condition_labels[condition] for condition in condition_order]
 
     figure = px.scatter(
         plot_data, x="p50_median", y="y_position", color="condition",
@@ -198,4 +216,7 @@ def dodged_confidence_interval_figure(
         range=[-0.75, len(agents_sorted) - 0.25],
     )
     figure.update_layout(legend=dict(orientation="h", y=1.04, x=0))
+    if condition_labels:
+        # long labels can wrap: anchor the legend's bottom edge so it grows up, clear of the top agent
+        figure.update_layout(legend=dict(title_text="", yanchor="bottom", y=1.01))
     return figure
