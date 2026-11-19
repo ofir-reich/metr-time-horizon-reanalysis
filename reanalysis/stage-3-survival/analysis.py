@@ -297,8 +297,11 @@ diagonal = np.array([bound_plot_data[["published_human_minutes",
                                       "gmean_censoring_lower_bound"]].max().max() * 1.4])
 fig.add_scatter(x=diagonal, y=diagonal, mode="lines",
                 line=dict(dash="dash", color="gray"), name="y = x", hoverinfo="skip")
+# identical log ranges and a locked 1:1 aspect, so y = x sits at exactly 45°
+fig.update_xaxes(range=np.log10(diagonal).tolist(), constrain="domain")
+fig.update_yaxes(range=np.log10(diagonal).tolist(), scaleanchor="x", scaleratio=1)
 fig.write_image(FIGURES / f"lower_bounds_all_censored{SUFFIX}.png",
-                width=800, height=560, scale=2)
+                width=800, height=760, scale=2)
 show(fig)
 
 # %% [markdown]
