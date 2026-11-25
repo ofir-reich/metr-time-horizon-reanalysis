@@ -45,6 +45,10 @@ If every baseliner failed at times $c_1 \dots c_n$, then each true completion ti
 
 ![lower bounds](figures/lower_bounds_all_censored.png)
 
+The bound does not need every attempt to fail. On a task with some successes, count the successes at their times and each failure at its give-up time: the geometric mean over **all attempts** still bounds the typical *attempter's* true time from below. The published value averages only the people who succeeded, and the gap between the two is exactly what dropping the failures hides. On the 56 baselined tasks with both successes and failures, **the published value sits below this bound on 35, by a median factor of 1.25×** (29 of 46 HCAST, 4 of 6 SWAA, 2 of 4 RE-Bench, the last subject to RE-Bench's different time convention). The factor is smaller than on the all-failure tasks, because the successes enter at their exact times, but it shows the failures matter even where the published number rests on real successes.
+
+![lower bounds, all tasks](figures/lower_bounds_all_tasks.png)
+
 ## Tier 2 — Kaplan–Meier
 
 Treating failures as right-censored and pooling tasks within length buckets, the [Kaplan–Meier median](figures/kaplan_meier_by_length.png) runs about **1.5× the naive geometric mean of the successes** in each of the well-populated middle buckets (4 minutes to about 4 hours).[^kmbuckets] That is a coarse nonparametric check on the parametric correction below, and it lands in the same place.
@@ -119,6 +123,7 @@ The defensible claim is therefore not a specific net number: **the SIMEX correct
 | HCAST estimate tasks: with public human runs / total | 16 / 16 | 23 / 63 |
 | observed all-failure set = estimate tasks with public runs? | **yes** | **yes** |
 | understated per the Tier-1 bound | 7/16, median 2.9× | 10/23, median 2.44× |
+| same bound over all attempts, baselined tasks with successes and failures | 35/56, median 1.25× | 31/55, median 1.29× |
 | Tier-3 correction factor (median) | 1.47× | 1.54× |
 | p50, geo-mean over SOTA-at-release agents (mle+bounds / ratio+bounds) | ×1.37 / ×1.35 | ×1.27 / ×1.26 |
 | most-capable-agent p50 (mle+bounds / ratio+bounds) | ×1.45 / ×1.35 | ×1.23 / ×1.17 |

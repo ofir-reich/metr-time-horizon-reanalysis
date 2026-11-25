@@ -287,7 +287,7 @@ fig = px.scatter(
     size="n_censored", hover_name="task_id", log_x=True, log_y=True,
     title="All-failure tasks: hard lower bound vs published estimate<br>"
           "<sub>above the dashed line = the published value is below the hard lower "
-          "bound</sub>",
+          "bound; bubble size = number of failed attempts</sub>",
     labels={"published_human_minutes": "published human_minutes (researcher estimate)",
             "gmean_censoring_lower_bound": "gmean of censoring times (hard lower bound)"},
 )
@@ -302,6 +302,84 @@ fig.update_xaxes(range=np.log10(diagonal).tolist(), constrain="domain")
 fig.update_yaxes(range=np.log10(diagonal).tolist(), scaleanchor="x", scaleratio=1)
 fig.write_image(FIGURES / f"lower_bounds_all_censored{SUFFIX}.png",
                 width=800, height=760, scale=2)
+show(fig)
+
+# %% [markdown]
+# ### The same bound on every task with a failed attempt
+#
+# The bound does not need *every* attempt to fail. On a task with successes at exact
+# times $t_i$ and failures at censoring times $c_k$, each person's true time is $t_i$ or
+# exceeds $c_k$, so the gmean over **all attempts** — successes at their times, failures
+# at their give-up times — bounds the typical *attempter's* true time from below. The
+# published value averages only the people who succeeded; the gap between the two is
+# exactly what dropping the failures hides. Tasks with no failures sit on y = x by
+# construction and are left out.
+
+# %%
+attempt_bound_by_task = human_runs.groupby("task_id").agg(
+    task_source=("task_source", "first"),
+    human_source=("human_source", "first"),
+    published_human_minutes=("human_minutes", "first"),
+    n_runs=("is_success", "size"),
+    n_successes=("is_success", "sum"),
+    gmean_all_attempts_lower_bound=("minutes_derived", stats.gmean),
+)
+attempt_bound_by_task["n_failed"] = (
+    attempt_bound_by_task["n_runs"] - attempt_bound_by_task["n_successes"]
+)
+attempt_bound_by_task = attempt_bound_by_task.query("n_failed > 0").copy()
+attempt_bound_by_task["bound_over_published"] = (
+    attempt_bound_by_task["gmean_all_attempts_lower_bound"]
+    / attempt_bound_by_task["published_human_minutes"]
+)
+attempt_bound_by_task["attempt_outcomes"] = np.where(
+    attempt_bound_by_task["n_successes"] == 0,
+    "all attempts failed", "some attempts succeeded",
+)
+attempt_bound_summary = attempt_bound_by_task.groupby(
+    ["attempt_outcomes", "human_source", "task_source"]
+).apply(lambda group: pd.Series({
+    "n_tasks": len(group),
+    "n_published_below_bound": (group["bound_over_published"] > 1).sum(),
+    "median_factor_among_those": group.query("bound_over_published > 1")[
+        "bound_over_published"].median(),
+}), include_groups=False)
+print(attempt_bound_summary.round(2).to_string())
+baselined_with_successes = attempt_bound_by_task.query(
+    "attempt_outcomes == 'some attempts succeeded' and human_source == 'baseline'"
+)
+print(f"\nbaselined tasks with both successes and failures: published value below the "
+      f"bound on {(baselined_with_successes['bound_over_published'] > 1).sum()} / "
+      f"{len(baselined_with_successes)}, median factor "
+      f"{baselined_with_successes.query('bound_over_published > 1')['bound_over_published'].median():.2f}×")
+
+# %%
+attempt_bound_plot_data = attempt_bound_by_task.reset_index()
+fig = px.scatter(
+    attempt_bound_plot_data, x="published_human_minutes",
+    y="gmean_all_attempts_lower_bound",
+    color="task_source", **metr.TASK_SOURCE_STYLE, symbol="attempt_outcomes",
+    size="n_failed", hover_name="task_id", log_x=True, log_y=True,
+    title="Hard lower bound vs published value, every task with a failed attempt<br>"
+          "<sub>above the dashed line = the published value is below the hard lower bound; "
+          "bubble size = number of failed attempts</sub>",
+    labels={"published_human_minutes": "published human_minutes",
+            "gmean_all_attempts_lower_bound":
+                "gmean of all attempt times (hard lower bound)"},
+)
+fig.update_layout(legend_title_text="")
+diagonal = np.array([
+    attempt_bound_plot_data[["published_human_minutes",
+                             "gmean_all_attempts_lower_bound"]].min().min() * 0.7,
+    attempt_bound_plot_data[["published_human_minutes",
+                             "gmean_all_attempts_lower_bound"]].max().max() * 1.4,
+])
+fig.add_scatter(x=diagonal, y=diagonal, mode="lines",
+                line=dict(dash="dash", color="gray"), name="y = x", hoverinfo="skip")
+fig.update_xaxes(range=np.log10(diagonal).tolist(), constrain="domain")
+fig.update_yaxes(range=np.log10(diagonal).tolist(), scaleanchor="x", scaleratio=1)
+fig.write_image(FIGURES / f"lower_bounds_all_tasks{SUFFIX}.png",
+                width=900, height=760, scale=2)
 show(fig)
 
 # %% [markdown]
@@ -480,7 +558,8 @@ fig = px.scatter(
     correction_plot_data, x="published_human_minutes", y="mle_over_naive",
     color="task_source", **metr.TASK_SOURCE_STYLE, size="n_censored", hover_name="task_id", log_x=True,
     title="Censoring correction factor per task<br>"
-          "<sub>1.0 = unchanged; higher = published human_minutes more understated</sub>",
+          "<sub>1.0 = unchanged; higher = published human_minutes more understated; "
+          "bubble size = number of failed runs</sub>",
     labels={"published_human_minutes": "published human_minutes (log scale)",
             "mle_over_naive": "censored MLE ÷ naive gmean"},
 )
@@ -615,6 +694,7 @@ print(scenario_summary.round(3).to_string(index=False))
 scenario_summary.to_csv(DATA_OUT / f"scenario_summary{SUFFIX}.csv", index=False, float_format=metr.CSV_FLOAT_FORMAT)
 survival_by_task.to_csv(DATA_OUT / f"survival_by_task{SUFFIX}.csv", float_format=metr.CSV_FLOAT_FORMAT)
 bound_by_all_censored_task.to_csv(DATA_OUT / f"lower_bounds_all_censored{SUFFIX}.csv", float_format=metr.CSV_FLOAT_FORMAT)
+attempt_bound_by_task.to_csv(DATA_OUT / f"lower_bounds_all_tasks{SUFFIX}.csv", float_format=metr.CSV_FLOAT_FORMAT)
 
 # %%
 SCENARIO_ORDER = ["published", "censored_ratio", "censored_ratio + bounds",

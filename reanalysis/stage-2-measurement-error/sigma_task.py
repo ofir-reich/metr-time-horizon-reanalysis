@@ -146,7 +146,9 @@ fig = px.scatter(
     x="human_minutes", y="log_time_std",
     color="task_source", **metr.TASK_SOURCE_STYLE, size="n_successful_runs",
     hover_name="task_id", log_x=True,
-    title="Between-baseliner spread vs task length",
+    title="Between-baseliner spread vs task length<br><sup>"
+          f"dashed line: METR's global σ = {METR_SIGMA_BASELINED}; "
+          "bubble size = number of successful runs</sup>",
     labels={"human_minutes": "human_minutes (log scale)",
             "log_time_std": "sample SD of ln(completion minutes)"},
 )
@@ -269,7 +271,8 @@ fig = px.scatter(
     color="task_source", **metr.TASK_SOURCE_STYLE, size="n_successful_runs",
     hover_name="task_id",
     title="Empirical-Bayes shrinkage of per-task σ (baselined tasks)<br><sup>"
-          "diagonal = no shrinkage; horizontal pull-lines = per-source prior s₀</sup>",
+          "diagonal = no shrinkage; horizontal pull-lines = per-source prior s₀; "
+          "bubble size = number of successful runs</sup>",
     labels={"log_time_std": "raw sample SD of ln(minutes)",
             "log_time_std_shrunken": "shrunken σ̃"},
 )
@@ -279,7 +282,13 @@ fig.add_shape(type="line", x0=0, y0=0, x1=axis_max, y1=axis_max,
 for prior_sigma, sources_with_prior in prior_by_source.groupby("prior_sigma"):
     fig.add_hline(y=prior_sigma, line_dash="dash", opacity=0.4,
                   annotation_text="s₀ " + "/".join(sources_with_prior.index))
-fig.write_image(FIGURES / f"sigma_shrinkage{SUFFIX}.png", width=900, height=550, scale=2)
+# locked 1:1 aspect, so the no-shrinkage diagonal sits at 45°; the y-axis stops just
+# above the data (shrunken σ̃ never exceeds the largest prior by much)
+axis_floor = -0.05 * axis_max
+fig.update_xaxes(range=[axis_floor, axis_max], constrain="domain")
+fig.update_yaxes(range=[axis_floor, float(sigma_by_task["log_time_std_shrunken"].max()) * 1.1],
+                 scaleanchor="x", scaleratio=1, constrain="domain")
+fig.write_image(FIGURES / f"sigma_shrinkage{SUFFIX}.png", width=900, height=520, scale=2)
 show(fig)
 
 # %% [markdown]
